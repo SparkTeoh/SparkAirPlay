@@ -146,9 +146,9 @@ class AirPlayReceiverService: NSObject {
         // DO NOT include pk (public key) or pi (instance ID) here - they are private!
         let txtRecord: [String: Data] = [
             "deviceid": getMacAddress().replacingOccurrences(of: ":", with: "").lowercased().data(using: .utf8) ?? Data(),
-            "features": "0x77".data(using: .utf8) ?? Data(),    // 119 in hex - basic AirPlay features
+            "features": "0x5A7FFFF7,0x1E".data(using: .utf8) ?? Data(),    // Full AirPlay capabilities
             "flags": "0x4".data(using: .utf8) ?? Data(),
-            "model": "AppleTV3,2".data(using: .utf8) ?? Data(),
+            "model": "AppleTV6,2".data(using: .utf8) ?? Data(),
             "protovers": "1.1".data(using: .utf8) ?? Data(),
             "srcvers": "379.27.1".data(using: .utf8) ?? Data(),
             "vv": "2".data(using: .utf8) ?? Data(),
@@ -164,7 +164,7 @@ class AirPlayReceiverService: NSObject {
             "cn": "0,1,2,3".data(using: .utf8) ?? Data(),
             "da": "true".data(using: .utf8) ?? Data(),
             "et": "0,3,5".data(using: .utf8) ?? Data(),
-            "ft": "0x77".data(using: .utf8) ?? Data(),
+            "ft": "0x5A7FFFF7,0x1E".data(using: .utf8) ?? Data(),
             "md": "0,1,2".data(using: .utf8) ?? Data(),
             "pw": "false".data(using: .utf8) ?? Data(),
             "sr": "44100".data(using: .utf8) ?? Data(),
@@ -172,7 +172,7 @@ class AirPlayReceiverService: NSObject {
             "tp": "UDP".data(using: .utf8) ?? Data(),
             "vn": "65537".data(using: .utf8) ?? Data(),
             "vs": "379.27.1".data(using: .utf8) ?? Data(),
-            "am": "AppleTV3,2".data(using: .utf8) ?? Data(),
+            "am": "AppleTV6,2".data(using: .utf8) ?? Data(),
             "sf": "0x4".data(using: .utf8) ?? Data()
         ]
         return NetService.data(fromTXTRecord: txtRecord)

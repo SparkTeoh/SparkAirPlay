@@ -433,15 +433,40 @@ class RTSPServer {
         let publicKeyHex = getPersistentPublicKey()
         let persistentID = getPersistentUUID()
         
-        // Create the XML plist dictionary with proper AirPlay capabilities
+        // Get raw TXT records from our Bonjour services (simulated)
+        let airplayTXTData = getAirPlayTXTRecordData()
+        let raopTXTData = getRAOPTXTRecordData()
+        
+        // Create the binary plist dictionary with ALL required AirPlay fields
         let plistDict: [String: Any] = [
-            "deviceid": deviceId,
-            "features": 119,                    // 0x77 - Basic video, photo, and audio streaming
-            "model": "AppleTV3,2",             // Apple TV 3rd generation model
-            "pk": publicKeyHex,                // Curve25519 public key (hex string)
-            "pi": persistentID,                // Persistent instance UUID
-            "vv": 2,                          // Video version
-            "srcvers": "379.27.1"             // Source version
+            // Core device info
+            "deviceid": deviceId,                    // MAC address without colons
+            "features": 1518977015,                  // 0x5A7FFFF7 - Full AirPlay capabilities
+            "model": "AppleTV6,2",                   // Apple TV 6th generation model
+            "srcvers": "379.27.1",                   // Source version (matches Bonjour)
+            "vv": 2,                                // Video version
+            
+            // Protocol info
+            "protocolVersion": "1.1",               // RTSP protocol version
+            "statusFlags": 4,                       // Status flags (audio cable attached)
+            
+            // Private pairing info (only sent in /info response)
+            "pk": publicKeyHex,                     // Curve25519 public key (hex string)
+            "pi": persistentID,                     // Persistent instance UUID
+            
+            // Device capabilities
+            "name": "SparkAirPlay",                 // Device name
+            "manufacturer": "Apple",                // Device manufacturer
+            "build": "17.0",                       // Build version
+            "sdk": "AirPlay;2.0.2",                // SDK info
+            
+            // Raw Bonjour TXT records (CRITICAL for validation)
+            "txtAirPlay": airplayTXTData,          // Raw AirPlay service TXT record
+            "txtRAOP": raopTXTData,                // Raw RAOP service TXT record
+            
+            // Keep alive settings
+            "keepAliveLowPower": true,
+            "keepAliveSendStatsAsBody": true
         ]
         
         do {
@@ -782,5 +807,46 @@ class RTSPServer {
         print("🆔 Generated new persistent instance ID: \(newUUID)")
         
         return newUUID
+    }
+    
+    private func getAirPlayTXTRecordData() -> Data {
+        // Generate raw TXT record data that matches our Bonjour advertisement
+        let deviceId = getMacAddress().replacingOccurrences(of: ":", with: "").lowercased()
+        
+        let txtRecord: [String: Data] = [
+            "deviceid": deviceId.data(using: .utf8) ?? Data(),
+            "features": "0x5A7FFFF7,0x1E".data(using: .utf8) ?? Data(),
+            "flags": "0x4".data(using: .utf8) ?? Data(),
+            "model": "AppleTV6,2".data(using: .utf8) ?? Data(),
+            "protovers": "1.1".data(using: .utf8) ?? Data(),
+            "srcvers": "379.27.1".data(using: .utf8) ?? Data(),
+            "vv": "2".data(using: .utf8) ?? Data(),
+            "pw": "false".data(using: .utf8) ?? Data()
+        ]
+        
+        return NetService.data(fromTXTRecord: txtRecord)
+    }
+    
+    private func getRAOPTXTRecordData() -> Data {
+        // Generate raw RAOP TXT record data that matches our Bonjour advertisement
+        let txtRecord: [String: Data] = [
+            "txtvers": "1".data(using: .utf8) ?? Data(),
+            "ch": "2".data(using: .utf8) ?? Data(),
+            "cn": "0,1,2,3".data(using: .utf8) ?? Data(),
+            "da": "true".data(using: .utf8) ?? Data(),
+            "et": "0,3,5".data(using: .utf8) ?? Data(),
+            "ft": "0x5A7FFFF7,0x1E".data(using: .utf8) ?? Data(),
+            "md": "0,1,2".data(using: .utf8) ?? Data(),
+            "pw": "false".data(using: .utf8) ?? Data(),
+            "sr": "44100".data(using: .utf8) ?? Data(),
+            "ss": "16".data(using: .utf8) ?? Data(),
+            "tp": "UDP".data(using: .utf8) ?? Data(),
+            "vn": "65537".data(using: .utf8) ?? Data(),
+            "vs": "379.27.1".data(using: .utf8) ?? Data(),
+            "am": "AppleTV6,2".data(using: .utf8) ?? Data(),
+            "sf": "0x4".data(using: .utf8) ?? Data()
+        ]
+        
+        return NetService.data(fromTXTRecord: txtRecord)
     }
 }
