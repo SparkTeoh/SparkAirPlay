@@ -437,14 +437,14 @@ class RTSPServer {
         ]
         
         do {
-            // Serialize to XML plist format (not binary)
-            let plistData = try PropertyListSerialization.data(fromPropertyList: plistDict, format: .xml, options: 0)
+            // Serialize to BINARY plist format (not XML)
+            let plistData = try PropertyListSerialization.data(fromPropertyList: plistDict, format: .binary, options: 0)
             
             // Create RTSP response with correct headers
             let response = """
             RTSP/1.0 200 OK\r
             CSeq: \(cseq)\r
-            Content-Type: text/x-apple-plist+xml\r
+            Content-Type: application/x-apple-binary-plist\r
             Content-Length: \(plistData.count)\r
             Server: AirTunes/379.27.1\r
             \r
@@ -462,15 +462,13 @@ class RTSPServer {
                 if let error = error {
                     print("❌ Failed to send /info response: \(error)")
                 } else {
-                    print("✅ Sent /info XML plist response successfully (\(plistData.count) bytes)")
-                    if let plistString = String(data: plistData, encoding: .utf8) {
-                        print("📄 Plist content preview:\n\(String(plistString.prefix(200)))...")
-                    }
+                    print("✅ Sent /info BINARY plist response successfully (\(plistData.count) bytes)")
+                    print("📄 Binary plist data sent (\(plistData.count) bytes)")
                 }
             })
             
         } catch {
-            print("❌ Failed to create XML plist: \(error)")
+            print("❌ Failed to create binary plist: \(error)")
         }
     }
     
