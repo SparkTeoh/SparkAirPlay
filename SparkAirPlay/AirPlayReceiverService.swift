@@ -111,17 +111,36 @@ class AirPlayReceiverService: NSObject {
     
     // MARK: - Bonjour Advertisement
     
-    private func startBonjourAdvertisement(port: UInt16, retry: Bool = false) {
-        let deviceName = getDeviceName()
-        let serviceName = retry ? "\(deviceName)-\(Int.random(in: 1000...9999))" : deviceName
-        let raopName = "\(AirPlayConfiguration.deviceID)@\(serviceName)"
+    private func startBonjourAdvertisement(port: UInt16) {
+    let serviceName = getDeviceName()
+    let raopName = "\(AirPlayConfiguration.deviceID)@\(serviceName)"
 
-        // --- START OF FIX ---
+    // For the AirPlay service
+    airplayService = NetService(domain: "", type: "_airplay._tcp.", name: serviceName, port: Int32(port))
+    airplayService?.delegate = self
+    let airPlayTXTData = NetService.data(fromTXTRecord: getAirPlayTXTRecord())
+    airplayService?.setTXTRecord(airPlayTXTData)
+    airplayService?.publish()
+
+    // For the RAOP service
+    raopService = NetService(domain: "", type: "_raop._tcp.", name: raopName, port: Int32(port))
+    raopService?.delegate = self
+    let raopTXTData = NetService.data(fromTXTRecord: getRAOPTXTRecord())
+    raopService?.setTXTRecord(raopTXTData)
+    raopService?.publish()
+    
+    print(" Starting Bonjour advertisement for '\(serviceName)' on port \(port)")
+}
+
+private func startBonjourAdvertisement(port: UInt16, retry: Bool) {
+    if retry {
+        // To avoid name conflicts, generate a random name
+        let serviceName = "\(getDeviceName())-\(Int.random(in: 1000...9999))"
+        let raopName = "\(AirPlayConfiguration.deviceID)@\(serviceName)"
 
         // For the AirPlay service
         airplayService = NetService(domain: "", type: "_airplay._tcp.", name: serviceName, port: Int32(port))
         airplayService?.delegate = self
-        // Directly get the [String: Data] dictionary and create the TXT record
         let airPlayTXTData = NetService.data(fromTXTRecord: getAirPlayTXTRecord())
         airplayService?.setTXTRecord(airPlayTXTData)
         airplayService?.publish()
@@ -129,15 +148,15 @@ class AirPlayReceiverService: NSObject {
         // For the RAOP service
         raopService = NetService(domain: "", type: "_raop._tcp.", name: raopName, port: Int32(port))
         raopService?.delegate = self
-        // Directly get the [String: Data] dictionary and create the TXT record
         let raopTXTData = NetService.data(fromTXTRecord: getRAOPTXTRecord())
         raopService?.setTXTRecord(raopTXTData)
         raopService?.publish()
-
-        // --- END OF FIX ---
         
-        print("🔄 Starting Bonjour advertisement for '\(serviceName)' on port \(port)")
+        print(" Starting Bonjour advertisement for '\(serviceName)' on port \(port)")
+    } else {
+        startBonjourAdvertisement(port: port)
     }
+}
     
     private func getAirPlayTXTRecord() -> [String: Data] {
         return [
