@@ -622,10 +622,6 @@ class RTSPServer {
         let deviceId = getMacAddress().replacingOccurrences(of: ":", with: "").lowercased()
         let persistentID = getPersistentUUID()
         
-        // Get raw TXT records from our Bonjour services (simulated)
-        let airplayTXTData = getAirPlayTXTRecordData()
-        let raopTXTData = getRAOPTXTRecordData()
-        
         // Create the binary plist dictionary with ALL required AirPlay fields
         let plistDict: [String: Any] = [
             "deviceid": deviceId,
@@ -634,7 +630,8 @@ class RTSPServer {
             "pi": persistentID,
             "pk": getPublicKeyData(),
             "srcvers": "379.27.1",
-            "vv": 2
+            "vv": 2,
+            "statusFlags": 4 // Indicates the receiver is available
         ]
         
         do {
@@ -647,7 +644,7 @@ RTSP/1.0 200 OK\r
 Content-Type: application/x-apple-binary-plist\r
 Content-Length: \(plistData.count)\r
 CSeq: \(cseq)\r
-Server: AirTunes/379.27.1\r
+Server: SparkAirPlay/1.0\r
 \r
 """
             
@@ -741,7 +738,7 @@ Server: AirTunes/379.27.1\r
         CSeq: \(cseq)\r
         Content-Type: application/x-apple-binary-plist\r
         Content-Length: \(responseData.count)\r
-        Server: AirTunes/379.27.1\r
+        Server: SparkAirPlay/1.0\r
         \r
         """
         
@@ -780,7 +777,7 @@ Server: AirTunes/379.27.1\r
         CSeq: \(cseq)\r
         Content-Type: application/x-apple-binary-plist\r
         Content-Length: \(errorData.count)\r
-        Server: AirTunes/379.27.1\r
+        Server: SparkAirPlay/1.0\r
         \r
         """
         
@@ -862,7 +859,7 @@ Server: AirTunes/379.27.1\r
         CSeq: \(cseq)\r
         Content-Type: application/x-apple-binary-plist\r
         Content-Length: \(responseData.count)\r
-        Server: AirTunes/379.27.1\r
+        Server: SparkAirPlay/1.0\r
         \r
         """
         
@@ -899,7 +896,7 @@ Server: AirTunes/379.27.1\r
         CSeq: \(cseq)\r
         Content-Type: application/x-apple-binary-plist\r
         Content-Length: \(errorData.count)\r
-        Server: AirTunes/379.27.1\r
+        Server: SparkAirPlay/1.0\r
         \r
         """
         
