@@ -7,12 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		40B845B09E3431F5ADFEBE1D /* AirPlayConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B144891BDBE3694792344F1 /* AirPlayConfiguration.swift */; };
-		74EC4B6F9F46E731AFAF83F4 /* KeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E643CF9F67739C5DB82500 /* KeyManager.swift */; };
-		86AF4094B69FE21679E834AD /* AirPlayConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B144891BDBE3694792344F1 /* AirPlayConfiguration.swift */; };
-		D5554E358C5B2CC0FFB21B4B /* AirPlayConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B144891BDBE3694792344F1 /* AirPlayConfiguration.swift */; };
-		E39747C4ACFF315C409E9818 /* KeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E643CF9F67739C5DB82500 /* KeyManager.swift */; };
-		ECAC466BAA7BBB73B40314BA /* KeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E643CF9F67739C5DB82500 /* KeyManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,11 +27,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		38E643CF9F67739C5DB82500 /* KeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KeyManager.swift; path = SparkAirPlay/KeyManager.swift; sourceTree = SOURCE_ROOT; };
 		3C4449692E3725530012A3F2 /* SparkAirPlay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SparkAirPlay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C4449772E3725550012A3F2 /* SparkAirPlayTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SparkAirPlayTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C4449812E3725550012A3F2 /* SparkAirPlayUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SparkAirPlayUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		7B144891BDBE3694792344F1 /* AirPlayConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AirPlayConfiguration.swift; path = SparkAirPlay/AirPlayConfiguration.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -78,8 +70,6 @@
 				3C44497A2E3725550012A3F2 /* SparkAirPlayTests */,
 				3C4449842E3725550012A3F2 /* SparkAirPlayUITests */,
 				3C44496A2E3725530012A3F2 /* Products */,
-				38E643CF9F67739C5DB82500 /* KeyManager.swift */,
-				7B144891BDBE3694792344F1 /* AirPlayConfiguration.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -237,8 +227,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E39747C4ACFF315C409E9818 /* KeyManager.swift in Sources */,
-				40B845B09E3431F5ADFEBE1D /* AirPlayConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,8 +234,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				74EC4B6F9F46E731AFAF83F4 /* KeyManager.swift in Sources */,
-				D5554E358C5B2CC0FFB21B4B /* AirPlayConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,8 +241,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ECAC466BAA7BBB73B40314BA /* KeyManager.swift in Sources */,
-				86AF4094B69FE21679E834AD /* AirPlayConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

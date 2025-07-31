@@ -30,6 +30,7 @@ class AirPlayReceiverService: NSObject {
     private var isServiceRunning = false
     private let servicePort: UInt16 = 7000
     private var actualRtspPort: UInt16? = nil
+    private var currentServicePort: UInt16 = 7000
     
     private override init() {
         super.init()
@@ -78,7 +79,8 @@ class AirPlayReceiverService: NSObject {
         
         // Small delay before starting Bonjour advertisement
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.startBonjourAdvertisement()
+            self.currentServicePort = portToTry
+            self.startBonjourAdvertisement(port: portToTry)
         }
         
         isServiceRunning = true
@@ -109,36 +111,32 @@ class AirPlayReceiverService: NSObject {
     
     // MARK: - Bonjour Advertisement
     
-    private func startBonjourAdvertisement(retry: Bool = false) {
-        guard let actualPort = actualRtspPort else {
-            print("❌ Cannot start Bonjour advertisement: RTSP port not available")
-            return
-        }
-        
-        let deviceName = getAirPlayName()
+    private func startBonjourAdvertisement(port: UInt16, retry: Bool = false) {
+        let deviceName = getDeviceName()
         let serviceName = retry ? "\(deviceName)-\(Int.random(in: 1000...9999))" : deviceName
-        
-        print("🔄 Starting Bonjour advertisement for '\(serviceName)' on port \(actualPort)")
-        
-        // Publish AirPlay service
-        airplayService = NetService(domain: "", type: "_airplay._tcp.", name: serviceName, port: Int32(actualPort))
+        let raopName = "\(AirPlayConfiguration.deviceID)@\(serviceName)"
+
+        // --- START OF FIX ---
+
+        // For the AirPlay service
+        airplayService = NetService(domain: "", type: "_airplay._tcp.", name: serviceName, port: Int32(port))
         airplayService?.delegate = self
-        
+        // Directly get the [String: Data] dictionary and create the TXT record
         let airPlayTXTData = NetService.data(fromTXTRecord: getAirPlayTXTRecord())
         airplayService?.setTXTRecord(airPlayTXTData)
         airplayService?.publish()
-        
-        // Also publish RAOP service for better compatibility
-        let raopName = "\(getMacAddress().replacingOccurrences(of: ":", with: "").lowercased())@\(serviceName)"
-        raopService = NetService(domain: "", type: "_raop._tcp.", name: raopName, port: Int32(actualPort))
+
+        // For the RAOP service
+        raopService = NetService(domain: "", type: "_raop._tcp.", name: raopName, port: Int32(port))
         raopService?.delegate = self
-        
+        // Directly get the [String: Data] dictionary and create the TXT record
         let raopTXTData = NetService.data(fromTXTRecord: getRAOPTXTRecord())
         raopService?.setTXTRecord(raopTXTData)
         raopService?.publish()
+
+        // --- END OF FIX ---
         
-        print("📡 Published AirPlay service: \(serviceName)")
-        print("📡 Published RAOP service: \(raopName)")
+        print("🔄 Starting Bonjour advertisement for '\(serviceName)' on port \(port)")
     }
     
     private func getAirPlayTXTRecord() -> [String: Data] {
@@ -257,7 +255,7 @@ extension AirPlayReceiverService: NetServiceDelegate {
            errorCode.intValue == NetService.ErrorCode.collisionError.rawValue {
             print("🔄 Name collision detected, retrying with different name...")
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                self.startBonjourAdvertisement(retry: true)
+                self.startBonjourAdvertisement(port: self.currentServicePort, retry: true)
             }
         } else {
             print("❌ Unrecoverable Bonjour error, stopping service")
