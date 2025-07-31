@@ -142,17 +142,17 @@ class AirPlayReceiverService: NSObject {
     }
     
     private func createAirPlayTXTRecord() -> Data {
+        // Only include PUBLIC discovery information in Bonjour TXT record
+        // DO NOT include pk (public key) or pi (instance ID) here - they are private!
         let txtRecord: [String: Data] = [
             "deviceid": getMacAddress().replacingOccurrences(of: ":", with: "").lowercased().data(using: .utf8) ?? Data(),
-            "features": "0x5A7FFFF7,0x1E".data(using: .utf8) ?? Data(),
+            "features": "0x77".data(using: .utf8) ?? Data(),    // 119 in hex - basic AirPlay features
             "flags": "0x4".data(using: .utf8) ?? Data(),
-            "model": "AppleTV6,2".data(using: .utf8) ?? Data(),
+            "model": "AppleTV3,2".data(using: .utf8) ?? Data(),
             "protovers": "1.1".data(using: .utf8) ?? Data(),
-            "srcvers": "366.0".data(using: .utf8) ?? Data(),
+            "srcvers": "379.27.1".data(using: .utf8) ?? Data(),
             "vv": "2".data(using: .utf8) ?? Data(),
-            "pw": "false".data(using: .utf8) ?? Data(),
-            "pk": "b077271cfc2bb291e5432c2a1e2427c64e883fa4ae4b2a1610005a2d191a0f4d".data(using: .utf8) ?? Data(),
-            "pi": UUID().uuidString.data(using: .utf8) ?? Data()
+            "pw": "false".data(using: .utf8) ?? Data()
         ]
         return NetService.data(fromTXTRecord: txtRecord)
     }
@@ -164,15 +164,15 @@ class AirPlayReceiverService: NSObject {
             "cn": "0,1,2,3".data(using: .utf8) ?? Data(),
             "da": "true".data(using: .utf8) ?? Data(),
             "et": "0,3,5".data(using: .utf8) ?? Data(),
-            "ft": "0x5A7FFFF7,0x1E".data(using: .utf8) ?? Data(),
+            "ft": "0x77".data(using: .utf8) ?? Data(),
             "md": "0,1,2".data(using: .utf8) ?? Data(),
             "pw": "false".data(using: .utf8) ?? Data(),
             "sr": "44100".data(using: .utf8) ?? Data(),
             "ss": "16".data(using: .utf8) ?? Data(),
             "tp": "UDP".data(using: .utf8) ?? Data(),
             "vn": "65537".data(using: .utf8) ?? Data(),
-            "vs": "366.0".data(using: .utf8) ?? Data(),
-            "am": "AppleTV6,2".data(using: .utf8) ?? Data(),
+            "vs": "379.27.1".data(using: .utf8) ?? Data(),
+            "am": "AppleTV3,2".data(using: .utf8) ?? Data(),
             "sf": "0x4".data(using: .utf8) ?? Data()
         ]
         return NetService.data(fromTXTRecord: txtRecord)
