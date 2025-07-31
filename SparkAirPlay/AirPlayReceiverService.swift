@@ -124,8 +124,9 @@ class AirPlayReceiverService: NSObject {
         airplayService = NetService(domain: "", type: "_airplay._tcp.", name: serviceName, port: Int32(actualPort))
         airplayService?.delegate = self
         
-        let txtData = createAirPlayTXTRecord()
-        airplayService?.setTXTRecord(txtData)
+        let airPlayTXTDict = getAirPlayTXTRecord().mapValues { $0.data(using: .utf8) ?? Data() }
+        let airPlayTXTData = NetService.data(fromTXTRecord: airPlayTXTDict)
+        airplayService?.setTXTRecord(airPlayTXTData)
         airplayService?.publish()
         
         // Also publish RAOP service for better compatibility
@@ -133,8 +134,9 @@ class AirPlayReceiverService: NSObject {
         raopService = NetService(domain: "", type: "_raop._tcp.", name: raopName, port: Int32(actualPort))
         raopService?.delegate = self
         
-        let raopTxtData = createRAOPTXTRecord()
-        raopService?.setTXTRecord(raopTxtData)
+        let raopTXTDict = getRAOPTXTRecord().mapValues { $0.data(using: .utf8) ?? Data() }
+        let raopTXTData = NetService.data(fromTXTRecord: raopTXTDict)
+        raopService?.setTXTRecord(raopTXTData)
         raopService?.publish()
         
         print("📡 Published AirPlay service: \(serviceName)")

@@ -618,10 +618,6 @@ class RTSPServer {
     }
     
     private func sendInfoResponse(to connection: NWConnection, cseq: String) {
-        // Generate persistent device credentials
-        let deviceId = getMacAddress().replacingOccurrences(of: ":", with: "").lowercased()
-        let persistentID = getPersistentUUID()
-        
         // Create the binary plist dictionary with ALL required AirPlay fields
         let plistDict: [String: Any] = [
             "deviceid": AirPlayConfiguration.deviceID,
