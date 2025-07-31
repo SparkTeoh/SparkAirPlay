@@ -124,8 +124,7 @@ class AirPlayReceiverService: NSObject {
         airplayService = NetService(domain: "", type: "_airplay._tcp.", name: serviceName, port: Int32(actualPort))
         airplayService?.delegate = self
         
-        let airPlayTXTDict = getAirPlayTXTRecord().mapValues { $0.data(using: .utf8) ?? Data() }
-        let airPlayTXTData = NetService.data(fromTXTRecord: airPlayTXTDict)
+        let airPlayTXTData = NetService.data(fromTXTRecord: getAirPlayTXTRecord())
         airplayService?.setTXTRecord(airPlayTXTData)
         airplayService?.publish()
         
@@ -134,8 +133,7 @@ class AirPlayReceiverService: NSObject {
         raopService = NetService(domain: "", type: "_raop._tcp.", name: raopName, port: Int32(actualPort))
         raopService?.delegate = self
         
-        let raopTXTDict = getRAOPTXTRecord().mapValues { $0.data(using: .utf8) ?? Data() }
-        let raopTXTData = NetService.data(fromTXTRecord: raopTXTDict)
+        let raopTXTData = NetService.data(fromTXTRecord: getRAOPTXTRecord())
         raopService?.setTXTRecord(raopTXTData)
         raopService?.publish()
         
@@ -143,33 +141,33 @@ class AirPlayReceiverService: NSObject {
         print("📡 Published RAOP service: \(raopName)")
     }
     
-    private func getAirPlayTXTRecord() -> [String: String] {
+    private func getAirPlayTXTRecord() -> [String: Data] {
         return [
-            "deviceid": AirPlayConfiguration.deviceID,
-            "features": String(AirPlayConfiguration.features),
-            "model": AirPlayConfiguration.model,
-            "srcvers": AirPlayConfiguration.sourceVersion,
-            "vv": String(AirPlayConfiguration.vv)
+            "deviceid": AirPlayConfiguration.deviceID.data(using: .utf8)!,
+            "features": String(AirPlayConfiguration.features).data(using: .utf8)!,
+            "model": AirPlayConfiguration.model.data(using: .utf8)!,
+            "srcvers": AirPlayConfiguration.sourceVersion.data(using: .utf8)!,
+            "vv": String(AirPlayConfiguration.vv).data(using: .utf8)!
         ]
     }
 
-    private func getRAOPTXTRecord() -> [String: String] {
+    private func getRAOPTXTRecord() -> [String: Data] {
         return [
-            "txtvers": "1",
-            "ch": "2",
-            "cn": "0,1,2,3",
-            "da": "true",
-            "et": "0,3,5",
-            "ft": String(AirPlayConfiguration.features),
-            "md": "0,1,2",
-            "pw": "false",
-            "sr": "44100",
-            "ss": "16",
-            "tp": "UDP",
-            "vn": "65537",
-            "vs": AirPlayConfiguration.sourceVersion,
-            "am": AirPlayConfiguration.model,
-            "sf": String(AirPlayConfiguration.statusFlags)
+            "txtvers": "1".data(using: .utf8)!,
+            "ch": "2".data(using: .utf8)!,
+            "cn": "0,1,2,3".data(using: .utf8)!,
+            "da": "true".data(using: .utf8)!,
+            "et": "0,3,5".data(using: .utf8)!,
+            "ft": String(AirPlayConfiguration.features).data(using: .utf8)!,
+            "md": "0,1,2".data(using: .utf8)!,
+            "pw": "false".data(using: .utf8)!,
+            "sr": "44100".data(using: .utf8)!,
+            "ss": "16".data(using: .utf8)!,
+            "tp": "UDP".data(using: .utf8)!,
+            "vn": "65537".data(using: .utf8)!,
+            "vs": AirPlayConfiguration.sourceVersion.data(using: .utf8)!,
+            "am": AirPlayConfiguration.model.data(using: .utf8)!,
+            "sf": String(AirPlayConfiguration.statusFlags).data(using: .utf8)!
         ]
     }
     
