@@ -363,7 +363,19 @@ class RTSPServer {
             }
             
             if let data = data, !data.isEmpty {
+                print("📥 Received \(data.count) bytes from \(address)")
+                
+                // Debug: Show what type of request this is
+                if let rawString = String(data: data, encoding: .utf8) {
+                    let firstLine = rawString.components(separatedBy: .newlines).first ?? "Unknown"
+                    print("🔍 Request type: \(firstLine)")
+                } else {
+                    print("🔍 Binary data received: \(data.prefix(20).map { String(format: "%02x", $0) }.joined(separator: " "))")
+                }
+                
                 self?.processRTSPData(data, from: connection)
+            } else if data != nil {
+                print("📭 Received empty data packet from \(address)")
             }
             
             if isComplete {
