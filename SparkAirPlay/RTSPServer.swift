@@ -643,13 +643,13 @@ class RTSPServer {
             
             // Create RTSP response with correct headers
             let response = """
-            RTSP/1.0 200 OK\r
-            CSeq: \(cseq)\r
-            Content-Type: application/x-apple-binary-plist\r
-            Content-Length: \(plistData.count)\r
-            Server: AirTunes/379.27.1\r
-            \r
-            """
+RTSP/1.0 200 OK\r
+Content-Type: application/x-apple-binary-plist\r
+Content-Length: \(plistData.count)\r
+CSeq: \(cseq)\r
+Server: AirTunes/379.27.1\r
+\r
+"""
             
             guard let responseData = response.data(using: .utf8) else {
                 print("❌ Failed to encode info response headers")
