@@ -199,7 +199,8 @@ class RTSPServer {
                 print("📡 Connection end-of-stream from \(address)")
                 self?.removeConnection(connection)
             } else {
-                // Continue receiving more RTSP requests
+                // Continue receiving more RTSP requests on this connection
+                print("🔄 Continuing to listen for more requests from \(address)")
                 self?.receiveData(on: connection)
             }
         }
@@ -280,6 +281,13 @@ class RTSPServer {
             }
             
             sendInfoResponse(to: connection, cseq: cseq)
+        } else if method == "POST" && url == "/pair-setup" {
+            print("✅ Handling POST /pair-setup request")
+            print("🔐 iPhone requesting security handshake")
+            if !body.isEmpty {
+                print("🔐 Pair-setup body: \(body.count) bytes")
+            }
+            sendPairSetupResponse(to: connection, cseq: cseq)
         } else if method == "POST" && url == "/feedback" {
             print("✅ Handling POST /feedback request")
             sendFeedbackResponse(to: connection, cseq: cseq)
@@ -470,6 +478,34 @@ class RTSPServer {
         } catch {
             print("❌ Failed to create binary plist: \(error)")
         }
+    }
+    
+    private func sendPairSetupResponse(to connection: NWConnection, cseq: String) {
+        print("🔐 Sending pair-setup response (placeholder)")
+        
+        // For now, send a simple 200 OK to acknowledge the request
+        // This keeps the connection alive and lets us see what happens next
+        let response = """
+        RTSP/1.0 200 OK\r
+        CSeq: \(cseq)\r
+        Content-Length: 0\r
+        Server: AirTunes/379.27.1\r
+        \r
+        """
+        
+        guard let responseData = response.data(using: .utf8) else {
+            print("❌ Failed to encode pair-setup response")
+            return
+        }
+        
+        connection.send(content: responseData, completion: .contentProcessed { error in
+            if let error = error {
+                print("❌ Failed to send pair-setup response: \(error)")
+            } else {
+                print("✅ Sent placeholder pair-setup response successfully")
+                print("🔐 Waiting for iPhone's next security command...")
+            }
+        })
     }
     
     private func getMacAddress() -> String {
