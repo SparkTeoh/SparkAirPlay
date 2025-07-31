@@ -631,8 +631,8 @@ class RTSPServer {
         let plistDict: [String: Any] = [
             // Core device info
             "deviceid": deviceId,                    // MAC address without colons
-            "features": 1518977015,                  // 0x5A7FFFF7 - Full AirPlay capabilities
-            "model": "AppleTV6,2",                   // Apple TV 6th generation model
+            "features": 119,                  // Minimal features for basic streaming
+            "model": "AppleTV3,2",                   // Older model for compatibility
             "srcvers": "379.27.1",                   // Source version (matches Bonjour)
             "vv": 2,                                // Video version
             
@@ -641,7 +641,7 @@ class RTSPServer {
             "statusFlags": 4,                       // Status flags (audio cable attached)
             
             // Private pairing info (only sent in /info response)
-            "pk": publicKeyHex,                     // Curve25519 public key (hex string)
+            "pk": getPublicKeyData(),                     // Curve25519 public key (raw data)
             "pi": persistentID,                     // Persistent instance UUID
             
             // Device capabilities
@@ -1158,6 +1158,46 @@ class RTSPServer {
         } else if connections.isEmpty {
             print("📡 Probe connection closed, keeping service running")
         }
+    }
+    
+    private func getPublicKeyData() -> Data {
+        let keyStorageKey = "SparkAirPlay.Curve25519.PublicKey"
+        
+        // Try to load existing key from UserDefaults
+        if let existingKeyHex = UserDefaults.standard.string(forKey: keyStorageKey) {
+            return dataFromHex(existingKeyHex) ?? Data()
+        }
+        
+        // Generate new Curve25519 key pair
+        let privateKey = Curve25519.Signing.PrivateKey()
+        let publicKey = privateKey.publicKey
+        
+        // Store the public key for future use
+        let publicKeyData = publicKey.rawRepresentation
+        let publicKeyHex = publicKeyData.map { String(format: "%02x", $0) }.joined()
+        UserDefaults.standard.set(publicKeyHex, forKey: keyStorageKey)
+        
+        // Also store the private key
+        let privateKeyData = privateKey.rawRepresentation
+        let privateKeyHex = privateKeyData.map { String(format: "%02x", $0) }.joined()
+        UserDefaults.standard.set(privateKeyHex, forKey: "SparkAirPlay.Curve25519.PrivateKey")
+        
+        return publicKeyData
+    }
+    
+    private func dataFromHex(_ hex: String) -> Data? {
+        var data = Data(capacity: hex.count / 2)
+        var index = hex.startIndex
+        while index < hex.endIndex {
+            let nextIndex = hex.index(index, offsetBy: 2)
+            if let byte = UInt8(hex[index..<nextIndex], radix: 16) {
+                data.append(byte)
+            } else {
+                return nil
+            }
+            index = nextIndex
+        }
+        return data
     }
     
     // MARK: - Persistent Crypto Keys and UUID
