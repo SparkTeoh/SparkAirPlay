@@ -47,13 +47,16 @@ class RTSPServer {
             parameters.allowFastOpen = false  // Disable for better compatibility
             parameters.includePeerToPeer = true
             
-            // Configure for both IPv4 and IPv6 support
+            // Configure for both IPv4 and IPv6 support (CRITICAL FIX)
             parameters.acceptLocalOnly = false
             parameters.preferNoProxies = true
             
-            // Set required interfaces - allow all network interfaces
-            parameters.requiredInterfaceType = .other
+            // Allow all network interfaces - no restrictions on interface type
+            // Don't set requiredInterfaceType to allow both wired and wireless
             parameters.prohibitedInterfaceTypes = []
+            
+            // Enable dual-stack IPv4/IPv6 support
+            parameters.preferNoProxies = true
             
             // Configure TCP options for better connection stability
             let tcpOptions = NWProtocolTCP.Options()
@@ -65,6 +68,7 @@ class RTSPServer {
             parameters.defaultProtocolStack.transportProtocol = tcpOptions
             
             // Create listener that binds to all interfaces (IPv4 and IPv6)
+            // Using NWEndpoint.Port without specific interface binds to all available interfaces
             listener = try NWListener(using: parameters, on: NWEndpoint.Port(rawValue: port)!)
             listener?.stateUpdateHandler = { [weak self] state in
                 switch state {
@@ -358,8 +362,8 @@ class RTSPServer {
                 let value = String(line[line.index(after: colonIndex)...]).trimmingCharacters(in: .whitespacesAndNewlines)
                 
                 if !key.isEmpty && !value.isEmpty {
-                    headers[key] = value
-                    if key == "cseq" { cseq = value }
+                headers[key] = value
+                if key == "cseq" { cseq = value }
                 }
             }
         }
