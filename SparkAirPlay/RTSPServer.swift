@@ -9,6 +9,7 @@ import Foundation
 import Network
 import SystemConfiguration
 import Darwin
+import CryptoKit
 
 protocol RTSPServerDelegate: AnyObject {
     func rtspServerDidAcceptConnection(from address: String)
@@ -419,48 +420,57 @@ class RTSPServer {
     }
     
     private func sendInfoResponse(to connection: NWConnection, cseq: String) {
-        // Generate a unique device ID based on MAC address
+        // Generate persistent device credentials
         let deviceId = getMacAddress().replacingOccurrences(of: ":", with: "").lowercased()
+        let publicKeyHex = getPersistentPublicKey()
+        let persistentID = getPersistentUUID()
         
-        // Essential /info response matching what real AirPlay receivers send
-        let plist: [String: Any] = [
+        // Create the XML plist dictionary with proper AirPlay capabilities
+        let plistDict: [String: Any] = [
             "deviceid": deviceId,
-            "features": NSNumber(value: 0x527FFFF7),  // Standard AirPlay video/audio features
-            "flags": NSNumber(value: 0x4),            // Receiver flag 
-            "model": "AppleTV6,2",   // Apple TV 4K model identifier
-            "protovers": "1.1",      // AirPlay protocol version
-            "srcvers": "366.0",      // AirTunes source version
-            "vv": NSNumber(value: 2), // Video version
-            "pk": "b077271cfc2bb291e5432c2a1e2427c64e883fa4ae4b2a1610005a2d191a0f4d",  // Public key (dummy)
-            "pi": UUID().uuidString  // Instance ID
+            "features": 119,                    // 0x77 - Basic video, photo, and audio streaming
+            "model": "AppleTV3,2",             // Apple TV 3rd generation model
+            "pk": publicKeyHex,                // Curve25519 public key (hex string)
+            "pi": persistentID,                // Persistent instance UUID
+            "vv": 2,                          // Video version
+            "srcvers": "379.27.1"             // Source version
         ]
         
         do {
-            let data = try PropertyListSerialization.data(fromPropertyList: plist, format: .binary, options: 0)
+            // Serialize to XML plist format (not binary)
+            let plistData = try PropertyListSerialization.data(fromPropertyList: plistDict, format: .xml, options: 0)
+            
+            // Create RTSP response with correct headers
             let response = """
             RTSP/1.0 200 OK\r
             CSeq: \(cseq)\r
-            Content-Type: application/x-apple-binary-plist\r
-            Content-Length: \(data.count)\r
-            Server: AirTunes/366.0\r
+            Content-Type: text/x-apple-plist+xml\r
+            Content-Length: \(plistData.count)\r
+            Server: AirTunes/379.27.1\r
             \r
             """
             
             guard let responseData = response.data(using: .utf8) else {
-                print("❌ Failed to encode info response")
+                print("❌ Failed to encode info response headers")
                 return
             }
             
-            let fullResponse = responseData + data
+            // Combine headers and plist data
+            let fullResponse = responseData + plistData
+            
             connection.send(content: fullResponse, completion: .contentProcessed { error in
                 if let error = error {
-                    print("❌ Failed to send info response: \(error)")
+                    print("❌ Failed to send /info response: \(error)")
                 } else {
-                    print("✅ Sent /info response successfully")
+                    print("✅ Sent /info XML plist response successfully (\(plistData.count) bytes)")
+                    if let plistString = String(data: plistData, encoding: .utf8) {
+                        print("📄 Plist content preview:\n\(String(plistString.prefix(200)))...")
+                    }
                 }
             })
+            
         } catch {
-            print("❌ Failed to create info plist: \(error)")
+            print("❌ Failed to create XML plist: \(error)")
         }
     }
     
@@ -687,5 +697,56 @@ class RTSPServer {
         } else if connections.isEmpty {
             print("📡 Probe connection closed, keeping service running")
         }
+    }
+    
+    // MARK: - Persistent Crypto Keys and UUID
+    
+    private func getPersistentPublicKey() -> String {
+        let keyStorageKey = "SparkAirPlay.Curve25519.PublicKey"
+        
+        // Try to load existing key from UserDefaults
+        if let existingKey = UserDefaults.standard.string(forKey: keyStorageKey) {
+            return existingKey
+        }
+        
+        // Generate new Curve25519 key pair
+        let privateKey = Curve25519.Signing.PrivateKey()
+        let publicKey = privateKey.publicKey
+        
+        // Convert public key to hex string
+        let publicKeyData = publicKey.rawRepresentation
+        let publicKeyHex = publicKeyData.map { String(format: "%02x", $0) }.joined()
+        
+        // Store the public key for future use
+        UserDefaults.standard.set(publicKeyHex, forKey: keyStorageKey)
+        
+        // Also store the private key for potential future use (encrypted in real implementation)
+        let privateKeyData = privateKey.rawRepresentation
+        let privateKeyHex = privateKeyData.map { String(format: "%02x", $0) }.joined()
+        UserDefaults.standard.set(privateKeyHex, forKey: "SparkAirPlay.Curve25519.PrivateKey")
+        
+        print("🔐 Generated new Curve25519 key pair")
+        print("🔑 Public key: \(publicKeyHex)")
+        
+        return publicKeyHex
+    }
+    
+    private func getPersistentUUID() -> String {
+        let uuidStorageKey = "SparkAirPlay.PersistentInstanceID"
+        
+        // Try to load existing UUID from UserDefaults
+        if let existingUUID = UserDefaults.standard.string(forKey: uuidStorageKey) {
+            return existingUUID
+        }
+        
+        // Generate new UUID
+        let newUUID = UUID().uuidString
+        
+        // Store for future use
+        UserDefaults.standard.set(newUUID, forKey: uuidStorageKey)
+        
+        print("🆔 Generated new persistent instance ID: \(newUUID)")
+        
+        return newUUID
     }
 }
