@@ -624,14 +624,14 @@ class RTSPServer {
         
         // Create the binary plist dictionary with ALL required AirPlay fields
         let plistDict: [String: Any] = [
-            "deviceid": deviceId,
-            "features": 119,
-            "model": "AppleTV3,2",
-            "pi": persistentID,
-            "pk": getPublicKeyData(),
-            "srcvers": "379.27.1",
-            "vv": 2,
-            "statusFlags": 4 // Indicates the receiver is available
+            "deviceid": AirPlayConfiguration.deviceID,
+            "features": AirPlayConfiguration.features,
+            "model": AirPlayConfiguration.model,
+            "pi": AirPlayConfiguration.persistentID,
+            "pk": KeyManager.shared.getPublicKeyData(),
+            "srcvers": AirPlayConfiguration.sourceVersion,
+            "vv": AirPlayConfiguration.vv,
+            "statusFlags": AirPlayConfiguration.statusFlags
         ]
         
         do {
@@ -1135,135 +1135,4 @@ Server: SparkAirPlay/1.0\r
         }
     }
     
-    private func getPublicKeyData() -> Data {
-        let keyStorageKey = "SparkAirPlay.Curve25519.PublicKey"
-        
-        // Try to load existing key from UserDefaults
-        if let existingKeyHex = UserDefaults.standard.string(forKey: keyStorageKey) {
-            return dataFromHex(existingKeyHex) ?? Data()
-        }
-        
-        // Generate new Curve25519 key pair
-        let privateKey = Curve25519.Signing.PrivateKey()
-        let publicKey = privateKey.publicKey
-        
-        // Store the public key for future use
-        let publicKeyData = publicKey.rawRepresentation
-        let publicKeyHex = publicKeyData.map { String(format: "%02x", $0) }.joined()
-        UserDefaults.standard.set(publicKeyHex, forKey: keyStorageKey)
-        
-        // Also store the private key
-        let privateKeyData = privateKey.rawRepresentation
-        let privateKeyHex = privateKeyData.map { String(format: "%02x", $0) }.joined()
-        UserDefaults.standard.set(privateKeyHex, forKey: "SparkAirPlay.Curve25519.PrivateKey")
-        
-        return publicKeyData
     }
-    
-    private func dataFromHex(_ hex: String) -> Data? {
-        var data = Data(capacity: hex.count / 2)
-        var index = hex.startIndex
-        while index < hex.endIndex {
-            let nextIndex = hex.index(index, offsetBy: 2)
-            if let byte = UInt8(hex[index..<nextIndex], radix: 16) {
-                data.append(byte)
-            } else {
-                return nil
-            }
-            index = nextIndex
-        }
-        return data
-    }
-    
-    // MARK: - Persistent Crypto Keys and UUID
-    
-    private func getPersistentPublicKey() -> String {
-        let keyStorageKey = "SparkAirPlay.Curve25519.PublicKey"
-        
-        // Try to load existing key from UserDefaults
-        if let existingKey = UserDefaults.standard.string(forKey: keyStorageKey) {
-            return existingKey
-        }
-        
-        // Generate new Curve25519 key pair
-        let privateKey = Curve25519.Signing.PrivateKey()
-        let publicKey = privateKey.publicKey
-        
-        // Convert public key to hex string
-        let publicKeyData = publicKey.rawRepresentation
-        let publicKeyHex = publicKeyData.map { String(format: "%02x", $0) }.joined()
-        
-        // Store the public key for future use
-        UserDefaults.standard.set(publicKeyHex, forKey: keyStorageKey)
-        
-        // Also store the private key for potential future use (encrypted in real implementation)
-        let privateKeyData = privateKey.rawRepresentation
-        let privateKeyHex = privateKeyData.map { String(format: "%02x", $0) }.joined()
-        UserDefaults.standard.set(privateKeyHex, forKey: "SparkAirPlay.Curve25519.PrivateKey")
-        
-        print("🔐 Generated new Curve25519 key pair")
-        print("🔑 Public key: \(publicKeyHex)")
-        
-        return publicKeyHex
-    }
-    
-    private func getPersistentUUID() -> String {
-        let uuidStorageKey = "SparkAirPlay.PersistentInstanceID"
-        
-        // Try to load existing UUID from UserDefaults
-        if let existingUUID = UserDefaults.standard.string(forKey: uuidStorageKey) {
-            return existingUUID
-        }
-        
-        // Generate new UUID
-        let newUUID = UUID().uuidString
-        
-        // Store for future use
-        UserDefaults.standard.set(newUUID, forKey: uuidStorageKey)
-        
-        print("🆔 Generated new persistent instance ID: \(newUUID)")
-        
-        return newUUID
-    }
-    
-    private func getAirPlayTXTRecordData() -> Data {
-        // Generate raw TXT record data that matches our Bonjour advertisement
-        let deviceId = getMacAddress().replacingOccurrences(of: ":", with: "").lowercased()
-        
-        let txtRecord: [String: Data] = [
-            "deviceid": deviceId.data(using: .utf8) ?? Data(),
-            "features": "0x77".data(using: .utf8) ?? Data(),
-            "flags": "0x4".data(using: .utf8) ?? Data(),
-            "model": "AppleTV3,2".data(using: .utf8) ?? Data(),
-            "protovers": "1.1".data(using: .utf8) ?? Data(),
-            "srcvers": "379.27.1".data(using: .utf8) ?? Data(),
-            "vv": "2".data(using: .utf8) ?? Data(),
-            "pw": "false".data(using: .utf8) ?? Data()
-        ]
-        
-        return NetService.data(fromTXTRecord: txtRecord)
-    }
-    
-    private func getRAOPTXTRecordData() -> Data {
-        // Generate raw RAOP TXT record data that matches our Bonjour advertisement
-        let txtRecord: [String: Data] = [
-            "txtvers": "1".data(using: .utf8) ?? Data(),
-            "ch": "2".data(using: .utf8) ?? Data(),
-            "cn": "0,1,2,3".data(using: .utf8) ?? Data(),
-            "da": "true".data(using: .utf8) ?? Data(),
-            "et": "0,3,5".data(using: .utf8) ?? Data(),
-            "ft": "0x77".data(using: .utf8) ?? Data(),
-            "md": "0,1,2".data(using: .utf8) ?? Data(),
-            "pw": "false".data(using: .utf8) ?? Data(),
-            "sr": "44100".data(using: .utf8) ?? Data(),
-            "ss": "16".data(using: .utf8) ?? Data(),
-            "tp": "UDP".data(using: .utf8) ?? Data(),
-            "vn": "65537".data(using: .utf8) ?? Data(),
-            "vs": "379.27.1".data(using: .utf8) ?? Data(),
-            "am": "AppleTV3,2".data(using: .utf8) ?? Data(),
-            "sf": "0x4".data(using: .utf8) ?? Data()
-        ]
-        
-        return NetService.data(fromTXTRecord: txtRecord)
-    }
-}

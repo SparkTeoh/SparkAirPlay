@@ -141,41 +141,34 @@ class AirPlayReceiverService: NSObject {
         print("📡 Published RAOP service: \(raopName)")
     }
     
-    private func createAirPlayTXTRecord() -> Data {
-        // Only include PUBLIC discovery information in Bonjour TXT record
-        // DO NOT include pk (public key) or pi (instance ID) here - they are private!
-        let txtRecord: [String: Data] = [
-            "deviceid": getMacAddress().replacingOccurrences(of: ":", with: "").lowercased().data(using: .utf8) ?? Data(),
-            "features": "0x5A7FFFF7,0x1E".data(using: .utf8) ?? Data(),    // Full AirPlay capabilities
-            "flags": "0x4".data(using: .utf8) ?? Data(),
-            "model": "AppleTV6,2".data(using: .utf8) ?? Data(),
-            "protovers": "1.1".data(using: .utf8) ?? Data(),
-            "srcvers": "379.27.1".data(using: .utf8) ?? Data(),
-            "vv": "2".data(using: .utf8) ?? Data(),
-            "pw": "false".data(using: .utf8) ?? Data()
+    private func getAirPlayTXTRecord() -> [String: String] {
+        return [
+            "deviceid": AirPlayConfiguration.deviceID,
+            "features": String(AirPlayConfiguration.features),
+            "model": AirPlayConfiguration.model,
+            "srcvers": AirPlayConfiguration.sourceVersion,
+            "vv": String(AirPlayConfiguration.vv)
         ]
-        return NetService.data(fromTXTRecord: txtRecord)
     }
-    
-    private func createRAOPTXTRecord() -> Data {
-        let txtRecord: [String: Data] = [
-            "txtvers": "1".data(using: .utf8) ?? Data(),
-            "ch": "2".data(using: .utf8) ?? Data(),
-            "cn": "0,1,2,3".data(using: .utf8) ?? Data(),
-            "da": "true".data(using: .utf8) ?? Data(),
-            "et": "0,3,5".data(using: .utf8) ?? Data(),
-            "ft": "0x5A7FFFF7,0x1E".data(using: .utf8) ?? Data(),
-            "md": "0,1,2".data(using: .utf8) ?? Data(),
-            "pw": "false".data(using: .utf8) ?? Data(),
-            "sr": "44100".data(using: .utf8) ?? Data(),
-            "ss": "16".data(using: .utf8) ?? Data(),
-            "tp": "UDP".data(using: .utf8) ?? Data(),
-            "vn": "65537".data(using: .utf8) ?? Data(),
-            "vs": "379.27.1".data(using: .utf8) ?? Data(),
-            "am": "AppleTV6,2".data(using: .utf8) ?? Data(),
-            "sf": "0x4".data(using: .utf8) ?? Data()
+
+    private func getRAOPTXTRecord() -> [String: String] {
+        return [
+            "txtvers": "1",
+            "ch": "2",
+            "cn": "0,1,2,3",
+            "da": "true",
+            "et": "0,3,5",
+            "ft": String(AirPlayConfiguration.features),
+            "md": "0,1,2",
+            "pw": "false",
+            "sr": "44100",
+            "ss": "16",
+            "tp": "UDP",
+            "vn": "65537",
+            "vs": AirPlayConfiguration.sourceVersion,
+            "am": AirPlayConfiguration.model,
+            "sf": String(AirPlayConfiguration.statusFlags)
         ]
-        return NetService.data(fromTXTRecord: txtRecord)
     }
     
     private func getDeviceName() -> String {
